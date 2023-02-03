@@ -9,18 +9,36 @@ import UIKit
 
 class FirstViewController: UIViewController {
 
-    private lazy var button: UIButton = {
+    var completion: RetainClass = RetainClass()
+
+    private lazy var button1: UIButton = {
         let button = UIButton()
 
         self.view.addSubview(button)
 
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("Forward", for: .normal)
+        button.setTitle("LEAKING", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         button.setTitleColor(UIColor.darkGray, for: .normal)
         button.backgroundColor = .systemYellow
         button.layer.cornerRadius = 16.0
-        button.addTarget(self, action: #selector(onTapNavigate), for: .touchUpInside)
+        button.addTarget(self, action: #selector(onTapLeaking), for: .touchUpInside)
+
+        return button
+    }()
+
+    private lazy var button2: UIButton = {
+        let button = UIButton()
+
+        self.view.addSubview(button)
+
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("NON-LEAKING", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.setTitleColor(UIColor.darkGray, for: .normal)
+        button.backgroundColor = .systemYellow
+        button.layer.cornerRadius = 16.0
+        button.addTarget(self, action: #selector(onTapNonLeaking), for: .touchUpInside)
 
         return button
     }()
@@ -34,17 +52,36 @@ class FirstViewController: UIViewController {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            self.button.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-            self.button.centerYAnchor.constraint(equalTo: self.view.centerYAnchor),
-            self.button.widthAnchor.constraint(equalToConstant: 240.0),
-            self.button.heightAnchor.constraint(equalToConstant: 48.0)
+            self.button1.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            self.button1.centerYAnchor.constraint(equalTo: self.view.centerYAnchor),
+            self.button1.widthAnchor.constraint(equalToConstant: 240.0),
+            self.button1.heightAnchor.constraint(equalToConstant: 48.0)
+        ])
+
+        NSLayoutConstraint.activate([
+            self.button2.topAnchor.constraint(equalTo: self.button1.bottomAnchor, constant: 16.0),
+            self.button2.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            self.button2.widthAnchor.constraint(equalToConstant: 240.0),
+            self.button2.heightAnchor.constraint(equalToConstant: 48.0)
         ])
     }
 
-    @objc func onTapNavigate() {
-        let vc = SecondViewController()
-        vc.modalPresentationStyle = .overFullScreen
-        self.present(vc, animated: true)
+    @objc func onTapLeaking() {
+        let secondVCReference = SecondViewController()
+
+        secondVCReference.completion = { vc in
+            self.completion = vc
+            print(secondVCReference)
+        }
+        
+        secondVCReference.modalPresentationStyle = .overFullScreen
+        self.present(secondVCReference, animated: true)
+    }
+
+    @objc func onTapNonLeaking() {
+        let secondVCReference = ThirdViewController()
+        secondVCReference.modalPresentationStyle = .overFullScreen
+        self.present(secondVCReference, animated: true)
     }
 }
 

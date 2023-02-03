@@ -1,26 +1,16 @@
 //
-//  ViewController.swift
+//  ThirdViewController.swift
 //  MemoryLeakage
 //
-//  Created by Murad on 24.12.22.
+//  Created by Murad on 03.02.23.
 //
 
 import UIKit
 
-class RetainClass {
-    var vc: UIViewController?
-
-    init(vc: UIViewController? = nil) {
-        self.vc = vc
-    }
-}
-
-class SecondViewController: UIViewController {
+class ThirdViewController: UIViewController {
 
     var retainList: [RetainClass] = []
     var retainObject: RetainClass = RetainClass()
-
-    var completion: ((RetainClass) -> Void)?
 
     private lazy var button: UIButton = {
         let button = UIButton()
@@ -60,7 +50,6 @@ class SecondViewController: UIViewController {
     }
 
     @objc func onTapNavigate(_ sender: Any) {
-        self.completion?(retainObject)
         self.dismiss(animated: true)
     }
 
