@@ -1,5 +1,9 @@
 import Foundation
 
+fileprivate enum SubscriptPurpose {
+    case get, set
+}
+
 public class LinkedListNode<T> {
     public var value: T
     public var next: LinkedListNode<T>?
@@ -44,41 +48,41 @@ public class SinglyLinkedList<T: Equatable> {
 
     public subscript(index: Int) -> T? {
         get {
-            if self.isIndexSafe(index: index) {
-                let node = self.node(at: index)
-                return node?.value
-            } else {
-                return nil
-            }
+            guard self.isIndexSafe(index: index, purpose: .get) else { return nil }
+
+            let node = self.node(at: index)
+            return node?.value
         }
 
         set {
-            if let newValue {
+            guard self.isIndexSafe(index: index, purpose: .set) else { return }
+
+            if index <= count - 1 {
+                self.update(node: self.node(at: index), to: newValue)
+            } else {
                 self.insert(newValue, at: index)
             }
         }
     }
 
-    public func node(at index: Int) -> Node? {
-        if index == 0 {
-            return head
-        } else {
-            var node = head?.next
-
-            for _ in 1..<index {
-                node = node?.next
-
-                if node == nil {
-                    break
-                }
-            }
-
-            return node
-        }
-    }
-
     public func value(at index: Int) -> T? {
         return self.node(at: index)?.value
+    }
+
+    public func node(at index: Int) -> Node? {
+        guard index != 0 else { return head }
+
+        var node = head?.next
+
+        for _ in 1..<index {
+            node = node?.next
+
+            if node == nil {
+                break
+            }
+        }
+
+        return node
     }
 
     public func append(_ value: T) {
@@ -87,53 +91,56 @@ public class SinglyLinkedList<T: Equatable> {
     }
 
     public func append(_ node: Node) {
-        let newNode = node
-
-        if let tailNode = tail {
-            tailNode.next = newNode
+        if let tail {
+            tail.next = node
         } else {
             head = node
         }
     }
 
-    public func insert(_ value: T, at index: Int) {
-        let node = Node(value: value)
-        insert(node, at: index)
+    public func insert(_ value: T?, at index: Int) {
+        if let value {
+            let node = Node(value: value)
+            insert(node, at: index)
+        }
     }
 
     public func insert(_ newNode: Node, at index: Int) {
-        if index == 0 {
-            newNode.next = nil
-            head = newNode
-        } else {
-            if index >= count - 1 {
-                let previous = node(at: index - 1)
+        guard isIndexSafe(index: index, purpose: .set) else { return }
 
-                newNode.next = nil
-                previous?.next = newNode
-            } else {
-                let currentNode = node(at: index)
-                currentNode?.value = newNode.value
-            }
-        }
-    }
-
-    public func update(node: Node, at index: Int, to newValue: T) {
-        self.node(at: index)?.value = newValue
-    }
-
-    public func add(_ newNode: Node, at index: Int) {
         if index == 0 {
             newNode.next = head
+            head = newNode
+        } else {
+            let previous = node(at: index - 1)
+            newNode.next = previous?.next
+            previous?.next = newNode
         }
     }
 
-    private func isIndexSafe(index: Int) -> Bool {
-        if index <= count - 1 && index >= 0 {
-            return true
-        } else {
-            print("Wrong index. Check your requested index again.")
-            return false
+    private func update(node: Node?, to newValue: T?) {
+        if let newValue {
+            node?.value = newValue
+        }
+    }
+}
+
+extension SinglyLinkedList {
+    private func isIndexSafe(index: Int, purpose: SubscriptPurpose) -> Bool {
+        switch purpose {
+        case .get:
+            if index <= count - 1 && index >= 0 {
+                return true
+            } else {
+                return false
+            }
+        case .set:
+            if index < count + 1 && index >= 0 {
+                return true
+            } else {
+                print("Wrong index. Check your requested index again.")
+                return false
+            }
         }
     }
 }
@@ -142,12 +149,14 @@ extension SinglyLinkedList {
     public func reverse() {
         var current = head
         var prev: Node?
+
         while current != nil {
             let next = current?.next
             current?.next = prev
             prev = current
             current = next
         }
+
         head = prev
     }
 }
@@ -184,11 +193,13 @@ extension SinglyLinkedList: CustomStringConvertible {
     public var description: String {
         var s = "["
         var node = head
+
         while let nd = node {
             s += "\(nd.value)"
             node = nd.next
             if node != nil { s += ", " }
         }
+
         return s + "]"
     }
 }
